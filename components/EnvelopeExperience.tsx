@@ -146,20 +146,52 @@ Sei que nos conhecemos há pouco tempo, mas eu quero que isso vá pra frente mai
     setShowSignature(false)
   }
 
+  // Função para tocar música
   const handleMusicClick = () => {
     setShowMusic(true)
-    // Tocar música automaticamente
-    if (audioRef.current) {
-      audioRef.current.play()
-    }
+    // Pequeno delay para garantir que o modal esteja aberto
+    setTimeout(() => {
+      if (audioRef.current) {
+        audioRef.current.play().catch(error => {
+          console.log('Erro ao tocar música:', error)
+        })
+      }
+    }, 100)
   }
 
+  // Função para fechar música
   const handleCloseMusic = () => {
     setShowMusic(false)
-    // Parar música
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
+    }
+  }
+
+  // Função para tocar música
+  const handlePlayMusic = () => {
+    if (audioRef.current) {
+      // Verificar se o áudio está pronto
+      if (audioRef.current.readyState >= 2) {
+        audioRef.current.play().then(() => {
+          console.log('🎵 Música tocando com sucesso!')
+        }).catch(error => {
+          console.log('❌ Erro ao tocar música:', error)
+          // Tentar recarregar o áudio
+          audioRef.current.load()
+          setTimeout(() => {
+            audioRef.current?.play().catch(e => console.log('❌ Erro na segunda tentativa:', e))
+          }, 1000)
+        })
+      } else {
+        console.log('⏳ Áudio ainda não está pronto, aguardando...')
+        // Aguardar o áudio carregar
+        audioRef.current.addEventListener('canplaythrough', () => {
+          audioRef.current?.play().catch(e => console.log('❌ Erro após carregamento:', e))
+        }, { once: true })
+      }
+    } else {
+      console.log('❌ Referência do áudio não encontrada')
     }
   }
 
@@ -510,7 +542,23 @@ Sei que nos conhecemos há pouco tempo, mas eu quero que isso vá pra frente mai
               onClick={(e) => e.stopPropagation()}
             >
               {/* Audio Element */}
-              <audio ref={audioRef} src="/music.mp3" preload="auto" />
+              <audio 
+                ref={audioRef} 
+                src="/music.mp3" 
+                preload="auto"
+                controls={false}
+                onLoadStart={() => console.log('🚀 Iniciando carregamento do áudio...')}
+                onLoadedMetadata={() => console.log('📊 Metadados do áudio carregados')}
+                onLoadedData={() => console.log('✅ Áudio carregado com sucesso!')}
+                onCanPlay={() => console.log('🎯 Áudio pode ser reproduzido')}
+                onCanPlayThrough={() => console.log('🎵 Áudio pode ser reproduzido completamente')}
+                onError={(e) => console.log('❌ Erro ao carregar áudio:', e)}
+                onPlay={() => console.log('▶️ Música começou a tocar!')}
+                onPause={() => console.log('⏸️ Música pausada!')}
+                onEnded={() => console.log('🔚 Música terminou')}
+                onStalled={() => console.log('⏳ Áudio travou')}
+                onSuspend={() => console.log('⏸️ Carregamento do áudio suspenso')}
+              />
               
               {/* Modal Header */}
               <div className="music-modal-header">
@@ -527,12 +575,33 @@ Sei que nos conhecemos há pouco tempo, mas eu quero que isso vá pra frente mai
               <div className="music-controls">
                 <div className="control-group">
                   <button 
-                    onClick={() => audioRef.current?.play()} 
+                    onClick={handlePlayMusic} 
                     className="control-button primary"
                   >
                     <span className="control-icon">▶️</span>
                     <span className="control-text">Tocar</span>
                   </button>
+                  
+                  {/* Botão de teste para debug */}
+                  <button 
+                    onClick={() => {
+                      console.log('Audio ref:', audioRef.current)
+                      console.log('Audio src:', audioRef.current?.src)
+                      console.log('Audio readyState:', audioRef.current?.readyState)
+                      if (audioRef.current) {
+                        audioRef.current.play().then(() => {
+                          console.log('Música tocando com sucesso!')
+                        }).catch(error => {
+                          console.log('Erro ao tocar:', error)
+                        })
+                      }
+                    }} 
+                    className="control-button"
+                    style={{ backgroundColor: '#ff6b6b', marginLeft: '10px' }}
+                  >
+                    🧪 Testar
+                  </button>
+                  
                   <div className="volume-control">
                     <span className="volume-icon">🔊</span>
                     <input 
