@@ -178,17 +178,25 @@ Sei que nos conhecemos há pouco tempo, mas eu quero que isso vá pra frente mai
         }).catch(error => {
           console.log('❌ Erro ao tocar música:', error)
           // Tentar recarregar o áudio
-          audioRef.current.load()
-          setTimeout(() => {
-            audioRef.current?.play().catch(e => console.log('❌ Erro na segunda tentativa:', e))
-          }, 1000)
+          if (audioRef.current) {
+            audioRef.current.load()
+            setTimeout(() => {
+              if (audioRef.current) {
+                audioRef.current.play().catch(e => console.log('❌ Erro na segunda tentativa:', e))
+              }
+            }, 1000)
+          }
         })
       } else {
         console.log('⏳ Áudio ainda não está pronto, aguardando...')
         // Aguardar o áudio carregar
-        audioRef.current.addEventListener('canplaythrough', () => {
-          audioRef.current?.play().catch(e => console.log('❌ Erro após carregamento:', e))
-        }, { once: true })
+        if (audioRef.current) {
+          audioRef.current.addEventListener('canplaythrough', () => {
+            if (audioRef.current) {
+              audioRef.current.play().catch(e => console.log('❌ Erro após carregamento:', e))
+            }
+          }, { once: true })
+        }
       }
     } else {
       console.log('❌ Referência do áudio não encontrada')
@@ -585,15 +593,17 @@ Sei que nos conhecemos há pouco tempo, mas eu quero que isso vá pra frente mai
                   {/* Botão de teste para debug */}
                   <button 
                     onClick={() => {
-                      console.log('Audio ref:', audioRef.current)
-                      console.log('Audio src:', audioRef.current?.src)
-                      console.log('Audio readyState:', audioRef.current?.readyState)
                       if (audioRef.current) {
+                        console.log('Audio ref:', audioRef.current)
+                        console.log('Audio src:', audioRef.current.src)
+                        console.log('Audio readyState:', audioRef.current.readyState)
                         audioRef.current.play().then(() => {
                           console.log('Música tocando com sucesso!')
                         }).catch(error => {
                           console.log('Erro ao tocar:', error)
                         })
+                      } else {
+                        console.log('❌ Referência do áudio não encontrada')
                       }
                     }} 
                     className="control-button"
